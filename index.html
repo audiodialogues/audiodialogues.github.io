@@ -1,0 +1,809 @@
+<html>
+
+<head>
+    <title>Audio Dialogues</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="helper-v2.js" defer=""></script>
+    <style>
+        header img {
+            border-radius: 50%;
+        }
+
+        /* td {
+            text-align: right;
+            vertical-align: middle;
+            padding: 0 24px;
+        } */
+        th,
+        td {
+            border: 1px solid gray;
+            padding: 8px;
+            text-align: center;
+        }
+
+        audio {
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .timestamp-label {
+            color: gray;
+        }
+
+        table.wide-audio audio {
+            width: 40vw;
+            max-width: 40vw;
+        }
+
+        tr:not(:first-child) {
+            border-top: 1px solid lightgrey;
+            /* Use light gray color for the border */
+            padding-top: 20px;
+            /* Add space after the horizontal line */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container pt-5 mt-5">
+        <div class="text-center">
+            <h1>Audio Dialogues: <br> Dialogues dataset for audio and music understanding</h1>
+        </div>
+        <br><br>
+        <div>
+            <p>
+                <b>Abstract. </b> Existing datasets for audio understanding primarily focus on single-turn interactions
+                (i.e. audio captioning, audio question answering) for describing audio in natural language, limiting
+                understanding audio via interactive dialogue. To address this gap, we introduce <b>Audio
+                    Dialogues</b>, a multi-turn dialogue dataset containing 160k samples for general audio sounds and
+                music. In
+                addition to dialogues, <b>Audio Dialogues</b> also has question/answer pairs to understand multiple
+                audios together. <b>Audio Dialogues</b> leverages a prompting-based approach and caption annotations
+                from existing datasets to generate multi-turn dialogues using a Large Language Model (LLM). We evaluate
+                audio-augmented large language models on our proposed dataset demonstrating the complexity and
+                applicability of <b>Audio Dialogues</b>.
+            </p>
+        </div>
+    </div>
+    <!-- <div class="container pt-5 mt-5 shadow p-5 mb-5 bg-white rounded">
+        <div class="column is-full-width">
+            <h2>Key Features</h2>
+            <p>
+                💡
+                💡
+                💡
+            </p>
+        </div>
+    </div> -->
+
+
+    <style>
+        .table-pagination {
+            display: none;
+            /* Hide all tables with pagination class by default */
+        }
+    </style>
+    <script>
+        function showPage(tableId, link, headingId, event) {
+
+            event.preventDefault()
+            if (tableId === 'rich-dialogues-2') {
+                document.getElementById('rich-dialogues-1').style.display = 'none';
+                document.getElementById('rich-dialogues-3').style.display = 'none';
+            }
+            if (tableId === 'rich-dialogues-1') {
+                document.getElementById('rich-dialogues-2').style.display = 'none';
+                document.getElementById('rich-dialogues-3').style.display = 'none';
+            }
+            if (tableId === 'rich-dialogues-3') {
+                document.getElementById('rich-dialogues-1').style.display = 'none';
+                document.getElementById('rich-dialogues-2').style.display = 'none';
+            }
+            // Hide tables in the same container
+            const containerId = headingId === 'mainHeading1' ? 'container-1' : 'container-2';
+            document.querySelectorAll(`.${containerId} .table-pagination`).forEach(table => {
+                table.style.display = 'none';
+            });
+
+            // Show the selected table
+            document.getElementById(tableId).style.display = 'table';
+
+            // Update heading dynamically based on tableId
+            let headingText = '';
+            if (tableId === 'rich-prompt-1') {
+                headingText = 'Prompt for AudioSet Dialogues';
+            } else if (tableId === 'rich-prompt-2') {
+                headingText = 'Prompt for Music Dialogues';
+            } else if (tableId === 'rich-prompt-3') {
+                headingText = 'Prompt for AudioSet Comparison';
+            } else if (tableId === 'rich-dialogues-1') {
+                headingText = 'AudioSet Dialogues';
+            } else if (tableId === 'rich-dialogues-2') {
+                headingText = 'Music Dialogues';
+            } else if (tableId === 'rich-dialogues-3') {
+                headingText = 'AudioSet Comparison';
+            }
+
+            // Include the rocket emoji (U+1F680)
+            document.getElementById(headingId).innerHTML = ' 🚀 ' + headingText;
+
+            // Toggle active state for pagination links
+            document.querySelectorAll('.pagination .page-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            link.parentElement.classList.add('active');
+            // document.querySelector(`.${containerId}`).scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        }
+    </script>
+
+    <div class="text-center">
+        <h2>Prompts</h2>
+
+    </div>
+    <div class="text-center">
+        <p>We show in detail the prompts that are used to generate (1) the AudioSet Dialogues, (2) the Music Dialogues,
+            and
+            (3) the AudioSet comparison subsets of the Audio Dialogues dataset.</p>
+    </div>
+    <div class="container pt-5 mt-5 shadow p-5 mb-5 bg-white rounded container-1">
+        <h4 id="mainHeading1">&#128640; Prompt for AudioSet Dialogues </h4>
+        <div class="flex-container">
+            <div class="table-responsive pt-1">
+                <table class="table-pagination pt-1" id="rich-prompt-1" style="display: table;">
+
+                    <thead>
+                        <tr>
+                            <td style="text-align: left">
+                                <b>sys prompt:</b> Based on the sound events, create a dialogue between you (the
+                                assistant)
+                                and a person (the user) about the events in the audio. Each dialogue should consist of:
+                                <br>
+                                1. A user examines the audio, and sends a reasonable and creative message to the
+                                assistant.
+                                <br>
+                                2. Once the audio is provided, the assistant thoroughly perceives and comprehends them,
+                                responding with helpful answers that provide comprehensive reasoning. Do not include
+                                timestamps in the answer provided by the assistant. <br>
+                                3. Considering the past dialogue i.e. the question and the answer in the previous
+                                timestep,
+                                the user chooses another question or further inquiry. <br>
+                                4. The assistant provides a helpful answer providing comprehensive reasoning regarding
+                                the
+                                audio content. <br>
+
+                                The audios are 10 seconds long and the sound events are segmented based on where they
+                                occur
+                                in the audio.
+                                All the questions asked by the user should be diverse and complex. <br><br>
+
+
+                                <b>Example 1:</b><br>
+                                Sound Events: Sound of Ambulance (siren) (High-pitched and wailing): [0.0s-1.0s]; Sound
+                                of
+                                Traffic noise, roadway noise (Droning, loud and intrusive): [0.0s-10.0s]; Sound of
+                                Accelerating, revving, vroom (Highpitched, short and intense): [2.0s-10.0s]; Sound of
+                                Generic impact sounds (Loud and sharp): [6.7s-6.8s].
+                                <br>
+                                <b>Dialogue:</b>
+                                <br>
+                                User: What does the audio sound like?<br>
+                                Assistant: An ambulance siren echoes while traffic noise fades, and an engine revs.
+                                <br>
+                                User: Can you describe in more detail about the engine revs?<br>
+                                Assistant: The engine revving is highpitched, short and intense.
+                                <br>
+                                User: From the highpitched sound, can you tell me what vehicle it was?<br>
+                                Assistant: It is hard to tell this from the information provided.
+                                <br>
+                                User: Are there any other events in the audio that might be relevant?<br>
+                                Assistant: There is a sound of impact which is very loud and sharp.
+                                <br>
+                                <br>
+                                <b>Example 2:</b>
+                                <br>
+                                Sound Events: Sound of Outside, rural or natural: [0.000s-10.000s]; Sound of Liquid:
+                                [0.474s-0.680s], [4.249s-5.292s]; Sound of Gurgling, bubbling: [0.474s-0.680s],
+                                [4.249s-5.292s]; Sound of Splash, splatter: [1.620s-3.116s]; Sound of Laughter:
+                                [2.745s-4.029s], [5.299s-10.000s]; Sound of Chuckle, chortle: [2.752s-4.029s]; Sound of
+                                Speech: [4.551s-4.935s]; Sound of Male speech, man speaking: [4.557s-4.935s]; Sound of
+                                Belly
+                                laugh: [5.292s-10.000s]
+                                <br>
+                                <b>Dialogue:</b>
+                                <br>
+                                User: What are the main events in the audio?<br>
+                                Assistant: Liquid sounds, laughter, speech, and a man speaking can be heard in a rural
+                                setting.
+                                <br>
+                                User: Is is he speaking to other people?<br>
+                                Assistant: As there is sound of laughter present from other people, the man might be
+                                speaking to others.
+                                <br>
+                                User: Can you explain in more detail about the first event?<br>
+                                Assistant: The liquid sounds are more of splashing, thrashing and splattering sounds.
+                                <br>
+                                User: Are there other people laughing with him?<br>
+                                Assistant: Yes, there are other laughter voices along with that of the man.
+                                <br>
+
+                                Based on the above examples, design a four-turn dialogue between the user and assistant
+                                for
+                                the example given below.
+                                The question asked by the user should use pronouns such as 'he', 'she', 'it', 'they' and
+                                'them' while referring to entities that have already occurred in the past questions or
+                                answers.
+                                Format each QA pair in a single line as a JSON dictionary (key ''user'' for question,
+                                and
+                                ''assistant'' for answer, wrapped with \{ and \}). Do not include any other explanation.
+                                <br><br>
+                                <b>Example 3:</b><br>
+                            </td>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+            <div class="table-responsive pt-1">
+                <table class="table-pagination pt-1" id="rich-prompt-2">
+                    <thead>
+                        <tr>
+                            <td style="text-align: left">
+                                <b>sys prompt:</b>
+                                Based on the music, create a dialogue between you (the assistant) and a person (the
+                                user)
+                                about the events in the music audio. Each dialogue should consist of: <br>
+                                1. A user examines the music, and sends a reasonable and creative message to the
+                                assistant.<br>
+                                2. Once the music audio is provided, the assistant thoroughly perceives and comprehends
+                                them, responding with helpful answers that provide comprehensive reasoning. Do not
+                                include
+                                timestamps in the answer provided by the assistant.<br>
+                                3. Considering the past dialogue i.e. the question and the answer in the previous
+                                timestep,
+                                the user chooses another question or further inquiry.<br>
+                                4. The assistant provides a helpful answer providing comprehensive reasoning regarding
+                                the
+                                music content.<br>
+                                The more complex and diverse the question, the better. You can use the list of questions
+                                below while asking questions.
+                                <br>
+                                <b>List of questions:</b><br>
+                                Is it a live recording or a studio recording?<br>
+                                Is the guitar acoustic or electric?<br>
+                                Is it playing chords, a riff or a solo?<br>
+                                What music style or genre is it?<br>
+                                What key is it in? <br>
+                                How about the time signature?<br>
+                                What's the tempo? Slow, Medium or Fast?<br>
+                                Does it have vocals?<br>
+                                Is it low pitched or high pitched?<br>
+                                Is the person speaking fast or slow?<br>
+                                What is the language and accent?<br>
+                                What emotion is conveyed by the voice?<br>
+                                What are the vocal characteristics of that emotion?<br>
+                                How old is the person likely to be given their vocal characteristics?<br><br>
+
+                                <b>Example 1:</b>
+                                <br>
+                                <b>Music description:</b> House music with a thought provoking message in the beginning
+                                that
+                                eventually builds up and can be used to create the sense of a social revolution.<br>
+
+                                <b>Dialogue:</b><br>
+
+                                User: What type of music is this? <br>
+                                Assistant: It is house music with synth and drums and a man speaking at the
+                                beginning.<br>
+                                User: What is his tone while speaking?<br>
+                                Assistant: He has an intense and energetic tone in his voice.<br>
+
+                                User: Does he speak till the end? <br>
+                                Assistant: No, he stops speaking halfway and then it is followed by house music.
+
+                                <br>
+                                User: What is the source of this music?<br>
+                                Assistant: This is electronic music.
+                                <br><br>
+                                <b>Example 2:</b>
+                                <br>
+                                Music description: Energetic bluesy song with a harmonica and horn section in musical
+                                dialogue.
+                                <br>
+                                <b>Dialogue:</b>
+                                <br>
+                                User: What instruments are playing in this music?<br>
+                                Assistant: This is a jazzy tune with harmonica, trumpet and drums playing.
+                                <br>
+                                User: Which key is the music playing in?<br>
+                                Assistant: The key is A Major.
+                                <br>
+                                User: How will you explain the tempo of this piece?<br>
+                                Assistant: The music is bouncy and positive with high beats per minute in the beginning
+                                and
+                                then changes signature halfway through.
+                                <br>
+                                User: What is the source of this music?<br>
+                                Assistant: This is fusion jazz as it has elements of bass and synthesizer.
+                                <br><br>
+                                Based on above examples, design a four-turn dialogue between the user and assistant for
+                                the
+                                example given below. The question asked by the user should use pronouns such as 'he',
+                                'she',
+                                'it', 'they' and 'them' while referring to entities that have already occurred in the
+                                past
+                                questions or answers.
+                                Format each QA pair in a single line as a JSON dictionary (key "user" for question, and
+                                "assistant" for answer, wrapped with \{ and \}). Do not include any other explanation.
+                                <br><br>
+                                <b>Example 3:</b>
+                            </td>
+                        </tr>
+                    </thead>
+                </table>
+
+            </div>
+            <div class="table-responsive pt-1">
+                <table class="table-pagination pt-1" id="rich-prompt-3">
+                    <thead>
+                        <tr>
+                            <td style="text-align: left">
+                                <b>sys prompt:</b>
+                                Based on the description of audios, create a dialogue between you (the assistant) and
+                                a person (the user) about the events in the audio. <br><br>
+
+                                <b>Example 1:</b>
+                                <br>
+                                Audio 1: Sound of Car (Engine hum and tire noise.)<br>
+                                Audio 2: Sound of Car (Engine hum and tire noise.)
+                                <br>
+                                <b>Dialogue:</b><br>
+                                User: What's the common type of sound in these two audios? <br>
+                                Assistant: Both of them have sounds of car and engine humming.
+                                <br><br>
+                                <b>Example 2:</b>
+                                <br>
+                                Audio 1: Sound of Male singing (Deep, resonant, and powerful tones.): [0.000s-1.246s],
+                                [1.595s-1.851s], [5.437s-8.394s]; Sound of Music (Sound produced by vibrating
+                                instruments.): [0.000s-10.000s]; Sound of Shout (Loud, high-pitched, intense vocal
+                                sound.): [2.375s-2.910s] <br>
+                                Audio 2: Sound of Female singing (High-pitched and melodious tones.): [0.000s-1.484s],
+                                [3.295s-7.558s], [7.779s-10.000s]; Sound of Singing (Melodic vocal sounds with pitch
+                                variation.): [0.000s-1.979s], [4.516s-5.011s], [7.537s-10.000s]; Sound of Crowd (Loud,
+                                diverse, and overlapping sounds.): [0.000s-2.013s], [7.558s-10.000s]; Sound of Music
+                                (Sound produced by vibrating instruments.): [0.000s-10.000s]; Sound of Human voice
+                                (Unique, complex, dynamic sound.): [9.842s-10.000s]
+                                <br>
+                                <b>Dialogue:</b><br>
+                                User: What are the differences between the speech in these two audios?<br>
+                                Assistant: The first one is male singing, the second one is a female singing.
+                                <br><br>
+                                <b>Example 3:</b>
+                                <br>
+                                Audio 1: This is a Christmas music piece with heavy influences from Celtic music.
+                                There is a female vocalist singing melodically as the lead. The melodic background is
+                                provided by the strings and the piano and at the same time Celtic instruments that
+                                resemble a harp and a dulcimer. There is a calming and positive aura to this piece. It
+                                could be playing in the background at a Christmas party. It could also be used in
+                                Christmas-themed shows or social media content.<br>
+                                Audio 2: This music is a spirited instrumental. The tempo is fast with an animated
+                                Piano harmony, synthesizer arrangements, synthesised violins, rhythmic digital drums,
+                                funky bass lines and electronic sounds. The music is superimposed over sounds of tapping
+                                and rhythmic beeping. The music is happy, perky, upbeat, enthusiastic, lively and
+                                spirited.<br>
+                                Audio 3: This is a lullaby that features a main melody made with a xylophone that has
+                                a bright sound. A sustained piano synth creates a dreamy and sleepy ambience sound. A
+                                subtle cello plays single chords that bounce from one beat to the next. This is a song a
+                                baby could fall asleep to.<br>
+                                <b>Dialogue:</b><br>
+                                User: What are the same and different instruments played in these three music
+                                audios?<br>
+                                Assistant: Piano appear in all these three music. The differences are that the first
+                                music has harp, the second music has synthesizer and violins, and the third music has
+                                cello.
+                                <br><br>
+                                Based on the above examples, design a single-turn between the user and assistant for
+                                the example given below.<br>
+                                The question asked by the user should focus on either the similarities or the
+                                differences between the audios given for comparison.<br>
+                                Once the description of audios is provided along with the question, the assistant
+                                thoroughly perceives and comprehends them, responding with helpful answers that provide
+                                comprehensive reasoning. Do not include timestamps in the answer provided by the
+                                assistant.<br>
+                                <br>
+                                Format each QA pair in a single line as a JSON dictionary (key "user" for question,
+                                and "assistant" for answer, wrapped with \{ and \}). Do not include any other
+                                explanation.
+                                <br><br>
+                                <b>Example 4:</b>
+
+                            </td>
+                        </tr>
+                    </thead>
+                </table>
+
+            </div>
+
+        </div>
+        <!-- Pagination -->
+        <ul class="pagination justify-content-center">
+            <li class="page-item active">
+                <a class="page-link" href="#" onclick="showPage('rich-prompt-1', this, 'mainHeading1', event)">1</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="#" onclick="showPage('rich-prompt-2', this, 'mainHeading1', event)">2</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="#" onclick="showPage('rich-prompt-3', this, 'mainHeading1', event)">3</a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="text-center">
+        <h2>Audio Dialogues dataset</h2>
+    </div>
+    <div class="text-center">
+        <p>Here we show some examples of generated dialogues via our data generation pipeline.</p>
+    </div>
+    <div class="container pt-5 mt-5 shadow p-5 mb-5 bg-white rounded container 2">
+        <h4 id="mainHeading2">&#128640; AudioSet Dialogues</h4>
+        <div class="flex-container">
+            <div class="table-responsive pt-1">
+                <table class="table-pagination pt-1" id="rich-dialogues-1" style="display: table;">
+                    <thead>
+
+                        <tr>
+                            <th style="text-align: center">Audio</th>
+                            <!-- <th style="text-align: center">Baseline</th> -->
+                            <th style="text-align: center">Dialogue</th>
+                        </tr>
+                        <tr style="height: 120px;">
+                            <td style="text-align: center;"><audio controls="" controlslist="nodownload" class="px-1">
+                                    <source src="static/dialogue/YwrNCahF0rXk.wav" type="audio/wav">Your browser does
+                                    not
+                                    support the audio element.
+                                </audio></td>
+                            <td style="text-align: left"><b>User:</b> What are the main sounds in the audio? <br>
+                                <b>Assistant:</b> The main sounds in the audio are rhythmic heartbeats and some
+                                background
+                                noise. <br><br>
+                                <b>User:</b> Is the heartbeat sound consistent throughout the audio?<br>
+                                <b>Assistant:</b>Yes, the heartbeat sound is consistent and rhythmic throughout the
+                                audio,
+                                with brief pauses in between. <br><br>
+
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center;"><audio controls="" controlslist="nodownload" class="px-1">
+                                    <source src="static/dialogue/Y7HwN12KfQ0U.wav" type="audio/wav">Your browser does
+                                    not
+                                    support the audio element.
+                                </audio></td>
+                            <td style="text-align: left"><b>User:</b> What are the main sounds in the audio? <br>
+                                <b>Assistant:</b> The main sounds in the audio are wind, change ringing or campanology,
+                                hubbub or speech noise, tapping, and clapping.<br><br>
+                                <b>User:</b> What is the nature of the speech noise?<br>
+                                <b>Assistant:</b> The speech noise is loud, overlapping, and indistinct, which is often
+                                referred to as hubbub or speech babble. <br><br>
+
+                                <b>User:</b> Is there any specific event that the clapping sound might be associated
+                                with? <br>
+                                <b>Assistant:</b> Given the presence of change ringing and hubbub, the clapping sound
+                                could
+                                be associated with a celebration or event, possibly in a public place like a town square
+                                or church.<br><br>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: center;"><audio controls="" controlslist="nodownload" class="px-1">
+                                    <source src="static/dialogue/Y2oSP0SN3d2g.wav" type="audio/wav">Your browser does
+                                    not
+                                    support the audio element.
+                                </audio></td>
+                            <td style="text-align: left"><b>User:</b> What are the main events in the audio? <br>
+                                <b>Assistant:</b> The main events in the audio include whistling, music, cheering,
+                                shouting, and the sound of fireworks.<br><br>
+                                <b>User:</b> Is the whistling part of the music?<br>
+                                <b>Assistant:</b> The whistling sound is separate from the music, but it might be part
+                                of the overall musical performance or event.
+                                <br><br>
+
+                                <b>User:</b> What about the cheering and shouting, are they related?<br>
+                                <b>Assistant:</b> Yes, the cheering and shouting are likely related. They could be
+                                reactions from a crowd at a concert or a public event.<br><br>
+                                <b>User:</b> Can you tell me more about the fireworks?<br>
+                                <b>Assistant:</b> The fireworks sound is a loud, explosive, echoing boom. It's brief,
+                                suggesting it might be the finale of the event or a highlight moment.<br><br>
+                            </td>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+            <div class="table-responsive pt-1">
+                <table class="table-pagination pt-1" id="rich-dialogues-2" style="display: none;">
+                    <thead>
+
+                        <tr>
+                            <th style="text-align: center">Audio</th>
+                            <!-- <th style="text-align: center">Baseline</th> -->
+                            <th style="text-align: center">Dialogue</th>
+                        </tr>
+                        <tr style="height: 120px;">
+                            <td style="text-align: center;"><audio controls="" controlslist="nodownload" class="px-1">
+                                    <source src="static/dialogue/Y4T2KBwRxi_g.wav" type="audio/wav">Your browser does
+                                    not
+                                    support the audio element.
+                                </audio></td>
+                            <td style="text-align: left"><b>User:</b> What instrument is being played in this recording?
+                                <br>
+                                <b>Assistant:</b> The instrument being played in this recording is a didgeridoo.
+                                <br><br>
+                                <b>User:</b> What is the nature of this recording?<br>
+                                <b>Assistant:</b>This is a live recording of a didgeridoo performance. You can hear the
+                                musician taking deep breaths intermittently while playing the instrument. <br><br>
+                                <b>User:</b> What is the tone of the instrument?<br>
+                                <b>Assistant:</b>The didgeridoo produces a deep, bellowing tone in this recording.
+                                <br><br>
+
+                            </td>
+                        </tr>
+                        <tr style="height: 120px;">
+                            <td style="text-align: center;"><audio controls="" controlslist="nodownload" class="px-1">
+                                    <source src="static/dialogue/Y63rqIYPHvlc.wav" type="audio/wav">Your browser does
+                                    not
+                                    support the audio element.
+                                </audio></td>
+                            <td style="text-align: left"><b>User:</b> What type of music is this? <br>
+                                <b>Assistant:</b> This is a beatboxing performance with a bassline vocal accompaniment.
+                                Finger snapping is also used to support the beat. <br><br>
+                                <b>User:</b> What is the tempo of this performance?<br>
+                                <b>Assistant:</b>The tempo of this performance is medium, which is typical for
+                                beatboxing
+                                performances as it allows for clear articulation of the beats. <br><br>
+                                <b>User:</b> Can you describe the role of the finger snapping in this performance?<br>
+                                <b>Assistant:</b>The finger snapping in this performance acts as a rhythmic support,
+                                helping to maintain the tempo and adding an additional layer of percussive sound to the
+                                beatboxing and bassline.<br><br>
+
+                            </td>
+                        </tr>
+
+                        <tr style="height: 120px;">
+                            <td style="text-align: center;"><audio controls="" controlslist="nodownload" class="px-1">
+                                    <source src="static/dialogue/YC3Jhu77uffQ.wav" type="audio/wav">Your browser does
+                                    not
+                                    support the audio element.
+                                </audio></td>
+                            <td style="text-align: left"><b>User:</b> What type of music is this? <br>
+                                <b>Assistant:</b> This is a video game music piece, specifically designed to create a
+                                haunting and eerie atmosphere. It could also be used in the soundtrack of a horror
+                                movie.<br><br>
+                                <b>User:</b> What instruments or sounds are used in this piece?<br>
+                                <b>Assistant:</b>The piece starts with gear sounds that resemble a music box being wound
+                                up. Then, a high-pitched melody starts playing, which is likely produced by the music
+                                box. The music box and the gear sounds are the primary sources of sound in this piece.
+                                <br><br>
+                                <b>User:</b>How would you describe the mood of this music?<br>
+                                <b>Assistant:</b>The mood of this music is haunting, bleak, and eerie. The high-pitched
+                                melody from the music box and the loud volume contribute to this atmosphere.<br><br>
+
+                            </td>
+                        </tr>
+
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="table-responsive pt-1">
+                <table class="table-pagination pt-1" id="rich-dialogues-3" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th style="text-align: center">Audio</th>
+                            <!-- <th style="text-align: center">Baseline</th> -->
+                            <th style="text-align: center">Dialogue</th>
+                        </tr>
+                        <tr style="height: 120px;">
+                            <td style="text-align: center;"><audio controls="" controlslist="nodownload" class="px-1">
+                                    <source src="static/dialogue/Yeiz9E9N-FIw.wav" type="audio/wav">Your browser does
+                                    not
+                                    support the audio element.
+                                </audio><br>
+                                <audio controls="" controlslist="nodownload" class="px-1">
+                                    <source src="static/dialogue/Y3zAp2kxzU7Q.wav" type="audio/wav">Your browser does
+                                    not
+                                    support the audio element.
+                                </audio>
+                                <audio controls="" controlslist="nodownload" class="px-1">
+                                    <source src="static/dialogue/YYSWiCtX74ck.wav" type="audio/wav">Your browser does
+                                    not
+                                    support the audio element.
+                                </audio>
+                                <audio controls="" controlslist="nodownload" class="px-1">
+                                    <source src="static/dialogue/YwkP2LEqLvDM.wav" type="audio/wav">Your browser does
+                                    not
+                                    support the audio element.
+                                </audio>
+
+                            </td>
+                            <td style="text-align: left"><b>User:</b> What are the common and different sounds in these
+                                four audios? <br>
+                                <b>Assistant:</b> The common sound in all four audios is the sound of music produced by
+                                vibrating instruments. The differences are that the first audio has sounds of bird
+                                vocalization, crying, slap, croak, and a fly. The second audio has sounds of breaking,
+                                screaming, and a clang. The third audio has sounds of male speech and a cricket. The
+                                fourth audio has sounds of human voice, caw, screaming, and a fart.<br><br>
+
+                            </td>
+                        </tr>
+                        <tr style="height: 120px;">
+                            <td style="text-align: center;"><audio controls="" controlslist="nodownload" class="px-1">
+                                    <source src="static/dialogue/Yrj7xnzNtnf0.wav" type="audio/wav">Your browser does
+                                    not
+                                    support the audio element.
+                                </audio><br>
+                                <audio controls="" controlslist="nodownload" class="px-1">
+                                    <source src="static/dialogue/YkGmKX5fILDg.wav" type="audio/wav">Your browser does
+                                    not
+                                    support the audio element.
+                                </audio>
+
+                            </td>
+                            <td style="text-align: left"><b>User:</b> What are the common and different sounds in these
+                                two audios? <br>
+                                <b>Assistant:</b> Both audios have background noise, conversation, female speech,
+                                breathing,
+                                and laughter. The first audio does not have any male speech or generic impact sounds
+                                which are present in the second audio.<br><br>
+
+                            </td>
+                        </tr>
+                        <tr style="height: 120px;">
+                            <td style="text-align: center;"><audio controls="" controlslist="nodownload" class="px-1">
+                                    <source src="static/dialogue/Yo7Nra5Cw_jQ.wav" type="audio/wav">Your browser does
+                                    not
+                                    support the audio element.
+                                </audio><br>
+                                <audio controls="" controlslist="nodownload" class="px-1">
+                                    <source src="static/dialogue/YjYseDmE3QW4.wav" type="audio/wav">Your browser does
+                                    not
+                                    support the audio element.
+                                </audio>
+
+                            </td>
+                            <td style="text-align: left"><b>User:</b> What are the similarities and differences in these
+                                two audios? <br>
+                                <b>Assistant:</b> Both audios have the sound of a telephone bell ringing and background
+                                noise. However, the first audio also includes the sound of a bell, which is not present
+                                in the second audio.<br><br>
+
+                            </td>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <ul class="pagination justify-content-center">
+            <li class="page-item active">
+                <a class="page-link" href="#" onclick="showPage('rich-dialogues-1',  this, 'mainHeading2',event)">1</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="#" onclick="showPage('rich-dialogues-2',  this, 'mainHeading2', event)">2</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="#" onclick="showPage('rich-dialogues-3',  this, 'mainHeading2', event)">3</a>
+            </li>
+        </ul>
+    </div>
+
+
+    <div class="text-center">
+        <h2>Multi-turn dialogue</h2>
+    </div>
+    <div class="text-center">
+        <p> Examples of multi-turn dialogues generated by Qwen Audio, LTU and Audio Flamingo on the Audio Dialogues
+            dataset.</p>
+    </div>
+    <div class="container pt-5 mt-5 shadow p-5 mb-5 bg-white rounded">
+        <div class="container pt-1">
+            <div class="table-responsive pt-1">
+                <table class="table pt-1" id="dialogue">
+                    <thead>
+                        <tr>
+                            <th style="text-align: center">Audio</th>
+                            <!-- <th style="text-align: center">Baseline</th> -->
+                            <th style="text-align: center">Dialogue</th>
+                        </tr>
+                        <tr style="height: 120px;">
+                            <td style="text-align: center;"><audio controls="" controlslist="nodownload" class="px-1">
+                                    <source src="static/dialogue/YJ75Aju6BsT8.wav" type="audio/wav">Your browser does
+                                    not
+                                    support the audio element.
+                                </audio></td>
+                            <td style="text-align: left"><b>User</b>: <b>Can you briefly explain what you hear in the
+                                    audio?</b><br>
+                                <b>Ground-truth</b>: The audio primarily consists of bird sounds, including chirping and
+                                bird vocalizations. There are also sounds of other animals. Additionally, there is a
+                                woman speaking at certain intervals.<br>
+                                <b>Qwen Audio</b>: Birds are chirping.<br>
+                                <b>Audio Flamingo</b>: The audio features a variety of sounds including bird
+                                vocalizations, mechanical sounds, impact sounds, a man speaking, and a ticking
+                                sound.<br><br>
+
+                                <b>User</b>: <b>Are the bird sounds continuous?</b><br>
+                                <b>Ground-truth</b>: The bird sounds are not continuous. They occur at different
+                                intervals throughout the audio, with some overlap with the woman's speech.<br>
+                                <b>Qwen Audio</b>: Yes, the bird sounds are continuous.<br>
+                                <b>Audio Flamingo</b>: No, the bird sounds are not continuous. They occur at different
+                                intervals throughout the audio.<br><br>
+
+                                <b>User</b>: <b>Do the bird sounds and the person's speech overlap?</b><br>
+                                <b>Ground-truth</b>: Yes, there are instances where the bird sounds and the woman's
+                                speech overlap.<br>
+                                <b>Qwen Audio</b>: Yes, the bird sounds and the woman's speech overlap.<br>
+                                <b>Audio Flamingo</b>: Yes, the bird sounds and the person's speech do overlap at
+                                certain points in the audio.<br>
+                            </td>
+
+                        </tr>
+                        <tr style="height: 120px;">
+                            <td style="text-align: center;"><audio controls="" controlslist="nodownload" class="px-1">
+                                    <source src="static/dialogue/YbcybO-SMY5E.wav" type="audio/wav">Your browser does
+                                    not
+                                    support the audio element.
+                                </audio></td>
+                            <td style="text-align: left"><b>User</b>: <b> Is the male voice rapping or singing? </b><br>
+                                <b>Ground-truth</b>: The male voice is doing both, rapping and singing in the audio.<br>
+                                <b>LTU</b>: The male voice is rapping.<br>
+                                <b>Audio Flamingo</b>: The male voice is rapping.<br><br>
+
+                                <b>User</b>: <b>What kind of music is it?</b><br>
+                                <b>Ground-truth</b>: The type of music isn't specified, but it's accompanied by rapping
+                                and male singing.<br>
+                                <b>LTU</b>: The kind of music is hip-hop.<br>
+                                <b>Audio Flamingo</b>: The music is a rap song.<br><br>
+
+                                <b>User</b>: <b> Is the male voice the only one present?</b><br>
+                                <b>Ground-truth</b>: Yes, the male voice is the only one specified in the audio, both
+                                rapping and singing.<br>
+                                <b>LTU</b>: Yes, the male voice is the only one present. <br>
+                                <b>Audio Flamingo</b>: Yes, the male voice is the only one present in the audio.<br>
+                            </td>
+                        </tr>
+                        
+                        <tr style="height: 120px;">
+                            <td style="text-align: center;"><audio controls="" controlslist="nodownload" class="px-1">
+                                    <source src="static/dialogue/Yjx27p7k2lSw.wav" type="audio/wav">Your browser does
+                                    not
+                                    support the audio element.
+                                </audio></td>
+                            <td style="text-align: left"><b>User</b>: <b>What genre does this music belong to? </b><br>
+                                <b>Ground-truth</b>: This music belongs to the R&B/Disco genre.<br>
+                                <b>LTU</b>: It is not specified in the given audio clip.<br>
+                                <b>Audio Flamingo</b>: This music belongs to the R&B genre.<br><br>
+
+                                <b>User</b>: <b>Can you tell me more about the vocals in this track?</b><br>
+                                <b>Ground-truth</b>: Sure, the vocals in this track are from a male singer who is
+                                singing in a higher register. His voice has been modified with effects, making it sound
+                                like a voice sample.<br>
+                                <b>LTU</b>: The vocals in this track are described as rich and full-bodied, but no
+                                further details are given about the specific singer or the lyrics being sung in the
+                                audio clip.<br>
+                                <b>Audio Flamingo</b>: The vocals in this track are by a male singer. His voice is deep,
+                                resonant, and powerful, adding to the overall emotional impact of the song.<br>
+                            </td>
+
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+
+</body>
+
+</html>
